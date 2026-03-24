@@ -1,45 +1,56 @@
-import { batches, documents } from '../db';
+import { Collection, WithId } from 'mongodb';
+import { connectDB, getBatchesCollection, getDocumentsCollection } from '../databases/db';
 import { randomUUID } from 'crypto';
 
-export const createBatch = (userIds: string[]) => {
+interface Batch {
+  _id: string;
+  userIds: string[];
+  status: string;
+  documentIds: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface Document {
+  _id: string;
+  content: Buffer | string;
+  createdAt: Date;
+}
+
+let batches: Collection<Batch>;
+let documents: Collection<Document>;
+
+export const startService = async () => {
+  await connectDB();
+  batches = getBatchesCollection() as unknown as Collection<Batch>;
+  documents = getDocumentsCollection() as unknown as Collection<Document>;
+  console.log('Service MongoDB prêt ✅');
+};
+
+export const createBatch = async (userIds: string[]) => {
+  if (!batches) throw new Error("DB non initialisée");
+
   const batchId = randomUUID();
-
-  batches[batchId] = {
-    status: 'pending',
-    documents: []
-  };
-
-  // Lancer traitement async (non bloquant)
-  processBatch(batchId, userIds);
-
+  await batches.insertOne({
+    _id: batchId,
+    userIds,
+    status: "pending",
+    documentIds: [],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
   return batchId;
 };
 
-const processBatch = async (batchId: string, userIds: string[]) => {
-  batches[batchId].status = 'processing';
-
-  for (const userId of userIds) {
-    const docId = randomUUID();
-
-    // simulation génération PDF
-    await new Promise(res => setTimeout(res, 20));
-
-    documents[docId] = {
-      id: docId,
-      userId,
-      content: `PDF for user ${userId}`
-    };
-
-    batches[batchId].documents.push(docId);
-  }
-
-  batches[batchId].status = 'completed';
+export const getBatch = async (batchId: string): Promise<WithId<Batch> | null> => {
+  if (!batches) throw new Error("DB non initialisée");
+  return await batches.findOne({ _id: batchId });
 };
 
-export const getBatch = (batchId: string) => {
-  return batches[batchId];
+export const getDocument = async (docId: string): Promise<WithId<Document> | null> => {
+  if (!documents) throw new Error("DB non initialisée");
+  return await documents.findOne({ _id: docId });
 };
 
-export const getDocument = (docId: string) => {
-  return documents[docId];
-};
+
+startService().catch(err => console.error("Erreur démarrage service:", err));
