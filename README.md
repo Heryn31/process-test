@@ -1,5 +1,12 @@
-Batch Processing – Sequence Diagram
+# Batch Processing Service
 
+Service de traitement batch asynchrone pour la génération de documents utilisateurs.
+
+## Architecture
+
+Le système suit une architecture basée sur une queue de travail asynchrone :
+
+```mermaid
 sequenceDiagram
     participant Client
     participant API as API Server (Express)
@@ -9,44 +16,73 @@ sequenceDiagram
     participant Metrics as Prometheus
     participant Grafana
 
-    %% Create batch
+    %% Création du batch
     Client->>API: POST /batches (userIds)
     API->>DB: Insert batch (status: pending)
     API->>Queue: Enqueue job (batchId)
     API-->>Client: 201 Created
 
-    %% Worker processing
+    %% Traitement par le worker
     Worker->>Queue: Consume job
     Worker->>DB: Update batch (processing)
 
-    %% Loop documents
+    %% Génération des documents
     loop for each userId
         Worker->>Worker: Generate document
         Worker->>DB: Insert document
         Worker->>Metrics: Increment documents_generated_total
     end
 
-    %% Finish batch
+    %% Finalisation du batch
     Worker->>DB: Update batch (completed)
     Worker->>Metrics: Observe batch_processing_duration_seconds
 
     %% Monitoring
     Metrics->>API: GET /metrics
-    Grafana->>Metrics: Query metrics
+    Grafana->>Metrics: Query metrics```
 
+Fonctionnement
+Création du batch : L'API reçoit une liste d'identifiants utilisateurs via POST /batches
 
-Un batch est créé via l’API avec une liste de userIds
-Le job est envoyé dans une queue pour traitement asynchrone
-Le worker traite chaque utilisateur et génère un document
-Les documents sont stockés dans MongoDB
-Les métriques sont exposées via Prometheus et visualisées dans Grafana
+Mise en file d'attente : Le job est placé dans une queue pour un traitement asynchrone
+
+Traitement : Le worker traite chaque utilisateur et génère un document associé
+
+Persistance : Les documents générés sont stockés dans MongoDB
+
+Monitoring : Les métriques sont exposées via Prometheus et visualisées dans Grafana
 
 Installation
+Prérequis
+Docker
 
+Docker Compose
+
+Démarrage
+bash
 docker compose up
+L'application sera accessible sur :
 
-Documentation
+API : http://localhost:3000
 
-/api-docs : Swagger Docs
+Grafana : http://localhost:3001
 
+Prometheus : http://localhost:9090
 
+Documentation API
+La documentation interactive Swagger est disponible à l'adresse :
+
+text
+http://localhost:3000/api-docs
+Métriques disponibles
+Métrique	Description
+documents_generated_total	Nombre total de documents générés
+batch_processing_duration_seconds	Durée de traitement des batches
+Stack technique
+API : Express.js
+
+Base de données : MongoDB
+
+Queue : Système de file d'attente asynchrone
+
+Monitoring : Prometheus + Grafana
