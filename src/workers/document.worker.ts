@@ -1,22 +1,15 @@
 import { parentPort, workerData } from "worker_threads";
+import { WorkerInput, WorkerResponse } from "../types";
 
-const TEMPLATE_COMPILATION_TIME = 100;
-
-interface WorkerInput {
-  userId: string;
-}
-
-interface WorkerResponse {
-  success: boolean;
-  buffer?: Buffer;
-  error?: string;
-}
+const TEMPLATE_COMPILATION_TIME = process.env.TEMPLATE_COMPILATION_TIME
+  ? parseInt(process.env.TEMPLATE_COMPILATION_TIME)
+  : 1000;
 
 let compiledTemplate: ((data: { userId: string }) => string) | null = null;
 
 const initTemplate = () => {
   if (!compiledTemplate) {
-    console.log("🔥 Compilation du template (1 seule fois par worker)");
+    console.log("Compilation du template (1 seule fois par worker)");
 
     compiledTemplate = (data) => {
       return `<h1>PDF for ${data.userId}</h1>`;

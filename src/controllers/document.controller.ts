@@ -2,8 +2,8 @@ import { Request, Response } from "express";
 import * as service from "../services/document.service";
 import { documentQueue } from "../queue/document.queue";
 
-const JOB_ATTEMPTS = 3;
-const JOB_BACKOFF_DELAY = 1000;
+const JOB_ATTEMPTS = process.env.JOB_ATTEMPTS ? parseInt(process.env.JOB_ATTEMPTS) : 3;
+const JOB_BACKOFF_DELAY = process.env.JOB_BACKOFF_DELAY ? parseInt(process.env.JOB_BACKOFF_DELAY) : 5000;
 
 export const createBatch = async (req: Request, res: Response) => {
   const { userIds } = req.body;
@@ -64,5 +64,5 @@ export const getDocument = async (
 
   // Simuler PDF
   res.setHeader("Content-Type", "application/pdf");
-  res.send(Buffer.from(doc.content || "")); // fallback si doc.content manquant
+  res.send(Buffer.from(doc.content || ""));
 };

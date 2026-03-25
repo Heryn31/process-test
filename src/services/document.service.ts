@@ -1,21 +1,8 @@
 import { Collection, WithId } from 'mongodb';
 import { connectDB, getBatchesCollection, getDocumentsCollection } from '../databases/db';
 import { randomUUID } from 'crypto';
+import { Batch, Document } from '../types';
 
-interface Batch {
-  _id: string;
-  userIds: string[];
-  status: string;
-  documentIds: string[];
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-interface Document {
-  _id: string;
-  content: Buffer | string;
-  createdAt: Date;
-}
 
 let batches: Collection<Batch>;
 let documents: Collection<Document>;
@@ -24,7 +11,7 @@ export const startService = async () => {
   await connectDB();
   batches = getBatchesCollection() as unknown as Collection<Batch>;
   documents = getDocumentsCollection() as unknown as Collection<Document>;
-  console.log('Service MongoDB prêt ✅');
+  console.log('Service MongoDB prêt');
 };
 
 export const createBatch = async (userIds: string[]) => {

@@ -1,5 +1,6 @@
 import express from 'express';
 import documentRoutes from './routes/document.routes';
+import { setupSwagger } from './config/swagger';
 
 const app = express();
 
@@ -10,5 +11,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/documents', documentRoutes);
+
+setupSwagger(app);
 
 export default app;

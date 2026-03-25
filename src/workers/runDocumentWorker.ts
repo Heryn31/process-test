@@ -1,21 +1,6 @@
 import { Worker } from "worker_threads";
 import path from "path";
-
-interface WorkerInput {
-  userId: string;
-}
-
-interface WorkerSuccess {
-  success: true;
-  buffer: Buffer;
-}
-
-interface WorkerError {
-  success: false;
-  error: string;
-}
-
-type WorkerResponse = WorkerSuccess | WorkerError;
+import { WorkerInput, WorkerResponse } from "../types";
 
 export const runDocumentWorker = (data: WorkerInput): Promise<Buffer> => {
   return new Promise((resolve, reject) => {
